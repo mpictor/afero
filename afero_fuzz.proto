@@ -1,0 +1,97 @@
+syntax = "proto3";
+package afero;
+
+//Protocol buffer defs for Afero. Use case: fuzzing afero.
+
+message DataSet {
+    repeated Action Actions = 1;
+}
+
+message Action {
+    oneof FsInterface {
+        MsgCreate MsgCreate = 1;
+        MsgMkdir MsgMkdir = 2;
+        MsgMkdirAll MsgMkdirAll = 3;
+        MsgOpen MsgOpen = 4;
+        MsgOpenFile MsgOpenFile = 5;
+        MsgRemove MsgRemove = 6;
+        MsgRemoveAll MsgRemoveAll = 7;
+        MsgRename MsgRename = 8;
+        MsgStat MsgStat = 9;
+        MsgName MsgName = 10;
+        MsgChmod MsgChmod = 11;
+        MsgChtimes MsgChtimes = 12;
+        MsgLstat MsgLstat = 13;
+        MsgSymlink MsgSymlink = 14;
+        MsgReadlink MsgReadlink = 15;
+        MsgEvalSymlinks MsgEvalSymlinks = 16;
+    }
+}
+message MsgCreate {
+    string Name = 1;
+}
+message MsgMkdir {
+    string Name = 1;
+    FileMode Perm = 2;
+}
+message MsgMkdirAll {
+    string Path = 1;
+    FileMode Perm = 2;
+}
+message MsgOpen {
+    string Name = 1;
+}
+message MsgOpenFile {
+    string Name = 1;
+    int64 Flag = 2;
+    FileMode Perm = 3;
+}
+message MsgRemove {
+    string Name = 1;
+}
+message MsgRemoveAll {
+    string Path = 1;
+}
+message MsgRename {
+    string Oldname = 1;
+    string Newname = 2;
+}
+message MsgStat {
+    string Name = 1;
+}
+message MsgName {}
+
+message MsgChmod {
+    string Name = 1;
+    FileMode Mode = 2;
+}
+message MsgChtimes {
+    string Name = 1;
+    Time Atime = 2;
+    Time Mtime = 3;
+}
+
+message MsgLstat {
+    string Name = 1;
+}
+
+message MsgSymlink {
+    string Oldname = 1;
+    string Newname = 2;
+}
+
+message MsgReadlink {
+    string Name = 1;
+}
+
+message MsgEvalSymlinks {
+    string Path = 1;
+}
+
+message FileMode {
+    int32 Mode = 1;
+}
+
+message Time {
+    int64 TS = 1;
+}
