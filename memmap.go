@@ -15,7 +15,6 @@ package afero
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,7 +63,7 @@ func (m *MemMapFs) unRegisterWithParent(fileName string) error {
 	}
 	parent := m.findParent(f)
 	if parent == nil {
-		log.Panic("parent of ", f.Name(), " is nil")
+		return fmt.Errorf("parent of %s is nil", f.Name())
 	}
 
 	parent.Lock()
@@ -263,8 +262,11 @@ func (m *MemMapFs) Remove(name string) error {
 func (m *MemMapFs) RemoveAll(path string) error {
 	path = normalizePath(path)
 	m.mu.Lock()
-	m.unRegisterWithParent(path)
+	err := m.unRegisterWithParent(path)
 	m.mu.Unlock()
+	if err != nil && err != ErrFileNotFound {
+		return &os.PathError{Op: "remove", Path: path, Err: err}
+	}
 
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -290,18 +292,20 @@ func (m *MemMapFs) Rename(oldname, newname string) error {
 	}
 
 	m.mu.RLock()
-	defer m.mu.RUnlock()
-	if _, ok := m.getData()[oldname]; ok {
-		m.mu.RUnlock()
+	_, ok := m.getData()[oldname]
+	m.mu.RUnlock()
+	if ok {
 		m.mu.Lock()
-		m.unRegisterWithParent(oldname)
+		defer m.mu.Unlock()
+		err := m.unRegisterWithParent(oldname)
+		if err != nil {
+			return &os.PathError{Op: "rename", Path: oldname, Err: err}
+		}
 		fileData := m.getData()[oldname]
 		delete(m.getData(), oldname)
 		mem.ChangeFileName(fileData, newname)
 		m.getData()[newname] = fileData
 		m.registerWithParent(fileData)
-		m.mu.Unlock()
-		m.mu.RLock()
 	} else {
 		return &os.PathError{Op: "rename", Path: oldname, Err: ErrFileNotFound}
 	}

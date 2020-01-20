@@ -11,27 +11,11 @@ import (
 
 var ErrUnderlyingNil = fmt.Errorf("SymlinkingWrapper.Underlying is nil")
 
-//wrapper around another Fs which resolves symlinks
-// any benefit to being a generic overlay?
-//
-// file op behavior vs symlink:
-// * by frequency of use, most file ops operate on original when called on a link
-// * exceptions
-//   * mv does not
-//   * rm does not
-//   * lstat does not
-//
-// * with broken symlink:
-//   * mkdir fails; naive impl would have it create dir linked to
-//   * touch creates file
-//
-// other?
-
 //SymlinkingWrapper wraps another fs and provides in-memory symlinks
 type SymlinkingWrapper struct {
 	Underlying Fs
 	mu         sync.RWMutex
-	symlinks   map[string]*syminfo //mlink
+	symlinks   map[string]*syminfo
 }
 
 //must impl interface Fs
@@ -265,10 +249,6 @@ func (w *SymlinkingWrapper) ReadlinkIfPossible(name string) (string, bool, error
 		if ok {
 			return name, true, nil
 		}
-		//not necessary?
-		// if si, ok := w.symlinks[name]; ok {
-		// 	return si.target, true, nil
-		// }
 	}
 	return "", true, ErrFileNotFound
 }
