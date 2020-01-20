@@ -137,6 +137,9 @@ func resolveRelative(path, link string) (string, error) {
 	noop2 := sep + "." + sep //   foo/./bar
 	prev := sep + ".." + sep //   foo/../bar
 	path = path + sep + link
+	if path[0] != '/' {
+		path = sep + path
+	}
 	for strings.Contains(path, noop) {
 		path = strings.Replace(path, noop, sep, -1)
 	}
